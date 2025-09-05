@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки почтового бота</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: white;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 16px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.9);
+            font-size: 16px;
+            margin-bottom: 5px;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: #00c853;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #009624;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 200, 83, 0.4);
+        }
+
+        .btn-secondary {
+            background: #ff6d00;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #e65100;
+            transform: translateY(-2px);
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .info-box a {
+            color: #00c853;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .info-box a:hover {
+            text-decoration: underline;
+        }
+
+        .provider-info {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 8px;
+            margin-top: 5px;
+            font-size: 12px;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚙️ Настройки почты</h1>
+            <p>Подключи свой почтовый ящик для мониторинга</p>
+        </div>
+
+        <form id="settings-form">
+            <div class="form-group">
+                <label for="email">📧 Ваш email:</label>
+                <input type="email" id="email" required placeholder="your.email@gmail.com">
+                <div class="provider-info" id="gmail-info">
+                    🔐 Для Gmail используй <a href="https://myaccount.google.com/apppasswords" target="_blank">пароль приложения</a>
+                </div>
+                <div class="provider-info" id="ukr-info">
+                    📧 Ukr.net/Education - используй обычный пароль от почты
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">🔑 Пароль:</label>
+                <input type="password" id="password" required placeholder="Введите пароль">
+            </div>
+
+            <div class="form-group">
+                <label for="sender">👤 Фильтр отправителей:</label>
+                <input type="text" id="sender" value="all" placeholder="all для всех писем">
+                <small>Например: no-reply@classroom.google.com</small>
+            </div>
+
+            <button type="submit" class="btn btn-primary">💾 Сохранить настройки</button>
+            <button type="button" class="btn btn-secondary" onclick="openMonitoring()">
+                📊 Перейти к мониторингу
+            </button>
+        </form>
+
+        <div class="info-box">
+            <strong>ℹ️ Поддерживаемые почтовые сервисы:</strong><br>
+            • Gmail (требуется пароль приложения)<br>
+            • Ukr.net / Ukr.education<br>
+            • Yahoo Mail<br>
+            • Outlook/Hotmail<br>
+            • Другие IMAP-сервисы
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.setText("💾 Сохранить").show();
+
+        // Определяем почтовый провайдер
+        document.getElementById('email').addEventListener('input', function(e) {
+            const email = e.target.value.toLowerCase();
+            const gmailInfo = document.getElementById('gmail-info');
+            const ukrInfo = document.getElementById('ukr-info');
+            
+            gmailInfo.style.display = 'none';
+            ukrInfo.style.display = 'none';
+            
+            if (email.includes('gmail.com')) {
+                gmailInfo.style.display = 'block';
+            } else if (email.includes('ukr.') || email.includes('ukr.education')) {
+                ukrInfo.style.display = 'block';
+            }
+        });
+
+        // Отправка формы
+        document.getElementById('settings-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = {
+                action: 'update_settings',
+                email: document.getElementById('email').value,
+                password: document.getElementById('password').value,
+                sender: document.getElementById('sender').value
+            };
+
+            tg.sendData(JSON.stringify(formData));
+            tg.showPopup({
+                title: 'Успех!',
+                message: 'Настройки сохранены. Можно переходить к мониторингу.',
+                buttons: [{type: 'ok'}]
+            });
+        });
+
+        function openMonitoring() {
+            // Открываем страницу мониторинга
+            tg.openLink(WEBAPP_MONITORING_URL);
+        }
+
+        tg.ready();
+    </script>
+</body>
+</html>
