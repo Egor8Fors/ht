@@ -3,9 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Настройки почтового бота</title>
+    <title>Mail Bot Control Panel</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-dark: #1f2937;
+            --bg-darker: #111827;
+            --text-light: #f3f4f6;
+            --text-lighter: #f9fafb;
+            --card-bg: rgba(255, 255, 255, 0.05);
+            --card-border: rgba(255, 255, 255, 0.1);
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -14,206 +28,517 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 100%);
             min-height: 100vh;
-            color: white;
-            padding: 20px;
+            color: var(--text-light);
+            padding: 0;
+            overflow-x: hidden;
         }
 
-        .container {
-            max-width: 500px;
-            margin: 0 auto;
-            background: rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(20px);
-            border-radius: 20px;
-            padding: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .app-container {
+            max-width: 100%;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         .header {
             text-align: center;
             margin-bottom: 30px;
+            padding: 20px 0;
         }
 
         .header h1 {
-            font-size: 32px;
+            font-size: 2.5rem;
             font-weight: 700;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
         }
 
         .header p {
-            opacity: 0.9;
-            font-size: 16px;
+            opacity: 0.8;
+            font-size: 1.1rem;
         }
 
-        .form-group {
+        /* Карточки */
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--card-border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Статистика */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
             margin-bottom: 20px;
         }
 
-        label {
-            display: block;
+        .stat-item {
+            text-align: center;
+            padding: 20px;
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--card-border);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
             margin-bottom: 8px;
-            font-weight: 600;
-            font-size: 16px;
         }
 
-        input, select {
-            width: 100%;
-            padding: 15px;
-            border: none;
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.9);
-            font-size: 16px;
-            margin-bottom: 5px;
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
         }
 
-        input:focus, select:focus {
-            outline: none;
-            background: white;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.3);
-        }
-
+        /* Кнопки */
         .btn {
-            width: 100%;
-            padding: 16px;
+            padding: 16px 24px;
             border: none;
             border-radius: 12px;
-            font-size: 18px;
+            font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            margin-top: 10px;
+            width: 100%;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
 
         .btn-primary {
-            background: #00c853;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
             color: white;
         }
 
         .btn-primary:hover {
-            background: #009624;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 200, 83, 0.4);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
         }
 
-        .btn-secondary {
-            background: #ff6d00;
+        .btn-success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
             color: white;
         }
 
-        .btn-secondary:hover {
-            background: #e65100;
-            transform: translateY(-2px);
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+            color: white;
         }
 
-        .info-box {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 15px;
-            border-radius: 12px;
-            margin-top: 20px;
-            font-size: 14px;
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+            color: white;
         }
 
-        .info-box a {
-            color: #00c853;
-            text-decoration: none;
+        /* Статус */
+        .status-badge {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
             font-weight: 600;
+            display: inline-block;
         }
 
-        .info-box a:hover {
-            text-decoration: underline;
+        .status-active {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
         }
 
-        .provider-info {
-            display: none;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 10px;
-            border-radius: 8px;
-            margin-top: 5px;
-            font-size: 12px;
+        .status-inactive {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+            border: 1px solid var(--danger);
         }
 
-        @media (max-width: 600px) {
-            .container {
-                padding: 20px;
-                margin: 10px;
+        /* Список писем */
+        .email-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .email-item {
+            padding: 16px;
+            margin-bottom: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border-left: 4px solid var(--primary);
+            transition: all 0.3s ease;
+        }
+
+        .email-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
+        }
+
+        .email-from {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-lighter);
+        }
+
+        .email-subject {
+            opacity: 0.9;
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .email-date {
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        /* Анимации */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .slide-in {
+            animation: slideIn 0.6s ease-out;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
             }
             
-            .header h1 {
-                font-size: 28px;
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
             }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .app-container {
+                padding: 15px;
+            }
+        }
+
+        /* Секции */
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.7;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            background: var(--success);
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>⚙️ Настройки почты</h1>
-            <p>Подключи свой почтовый ящик для мониторинга</p>
-        </div>
-
-        <form id="settings-form">
-            <div class="form-group">
-                <label for="email">📧 Ваш email:</label>
-                <input type="email" id="email" required placeholder="your.email@gmail.com">
-                <div class="provider-info" id="gmail-info">
-                    🔐 Для Gmail используй <a href="https://myaccount.google.com/apppasswords" target="_blank">пароль приложения</a>
-                </div>
-                <div class="provider-info" id="ukr-info">
-                    📧 Ukr.net/Education - используй обычный пароль от почты
+    <div class="app-container">
+        <!-- Загрузка -->
+        <div id="loading-section" class="section">
+            <div class="loading">
+                <div class="card">
+                    <h2>🔄 Загрузка...</h2>
+                    <p>Подключаемся к вашему почтовому ящику</p>
                 </div>
             </div>
-
-            <div class="form-group">
-                <label for="password">🔑 Пароль:</label>
-                <input type="password" id="password" required placeholder="Введите пароль">
-            </div>
-
-            <div class="form-group">
-                <label for="sender">👤 Фильтр отправителей:</label>
-                <input type="text" id="sender" value="all" placeholder="all для всех писем">
-                <small>Например: no-reply@classroom.google.com</small>
-            </div>
-
-            <button type="submit" class="btn btn-primary">💾 Сохранить настройки</button>
-            <button type="button" class="btn btn-secondary" onclick="openMonitoring()">
-                📊 Перейти к мониторингу
-            </button>
-        </form>
-
-        <div class="info-box">
-            <strong>ℹ️ Поддерживаемые почтовые сервисы:</strong><br>
-            • Gmail (требуется пароль приложения)<br>
-            • Ukr.net / Ukr.education<br>
-            • Yahoo Mail<br>
-            • Outlook/Hotmail<br>
-            • Другие IMAP-сервисы
         </div>
+
+        <!-- Настройки (только если не настроено) -->
+        <div id="setup-section" class="section hidden">
+            <div class="header">
+                <h1>⚙️ Настройка почты</h1>
+                <p>Подключите свой почтовый ящик для начала мониторинга</p>
+            </div>
+
+            <div class="card">
+                <form id="setup-form">
+                    <div style="margin-bottom: 20px;">
+                        <label for="email" style="display: block; margin-bottom: 8px; font-weight: 600;">📧 Ваш email:</label>
+                        <input type="email" id="email" required placeholder="your.email@gmail.com" 
+                               style="width: 100%; padding: 15px; border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.1); color: white; font-size: 16px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label for="password" style="display: block; margin-bottom: 8px; font-weight: 600;">🔑 Пароль:</label>
+                        <input type="password" id="password" required placeholder="Введите пароль" 
+                               style="width: 100%; padding: 15px; border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.1); color: white; font-size: 16px;">
+                    </div>
+
+                    <div style="margin-bottom: 20px;">
+                        <label for="sender" style="display: block; margin-bottom: 8px; font-weight: 600;">👤 Фильтр отправителей:</label>
+                        <input type="text" id="sender" value="all" placeholder="all для всех писем" 
+                               style="width: 100%; padding: 15px; border: none; border-radius: 12px; background: rgba(255, 255, 255, 0.1); color: white; font-size: 16px;">
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">💾 Сохранить и начать мониторинг</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Панель мониторинга (основной интерфейс) -->
+        <div id="monitoring-section" class="section hidden">
+            <div class="header">
+                <h1>📊 Мониторинг почты</h1>
+                <p>Реальный контроль вашего почтового ящика</p>
+            </div>
+
+            <!-- Статус и управление -->
+            <div class="card slide-in">
+                <div class="card-title">📈 Статус системы</div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-emails">0</div>
+                        <div class="stat-label">Всего писем</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="today-emails">0</div>
+                        <div class="stat-label">Сегодня</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="unread-emails">0</div>
+                        <div class="stat-label">Не прочитано</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="last-uid">0</div>
+                        <div class="stat-label">Последний UID</div>
+                    </div>
+                </div>
+
+                <div style="text-align: center; margin: 20px 0;">
+                    <span id="status-badge" class="status-badge status-inactive">❌ Остановлен</span>
+                    <p id="status-text" style="margin-top: 10px; opacity: 0.8;">Мониторинг не активен</p>
+                </div>
+
+                <div id="control-buttons">
+                    <button onclick="toggleMonitoring()" class="btn btn-success" id="start-btn">
+                        🚀 Запустить мониторинг
+                    </button>
+                    <button onclick="toggleMonitoring()" class="btn btn-danger hidden" id="stop-btn">
+                        🛑 Остановить мониторинг
+                    </button>
+                    <button onclick="checkMailNow()" class="btn btn-primary">
+                        🔄 Проверить сейчас
+                    </button>
+                </div>
+            </div>
+
+            <!-- Информация о подключении -->
+            <div class="card slide-in">
+                <div class="card-title">🔗 Подключение</div>
+                <div style="line-height: 1.6;">
+                    <p><strong>📧 Почта:</strong> <span id="user-email">-</span></p>
+                    <p><strong>👤 Фильтр:</strong> <span id="user-filter">-</span></p>
+                    <p><strong>🕐 Настроен:</strong> <span id="user-created">-</span></p>
+                </div>
+                <button onclick="showSetup()" class="btn btn-warning" style="margin-top: 15px;">
+                    ⚙️ Изменить настройки
+                </button>
+            </div>
+
+            <!-- Последние письма -->
+            <div class="card slide-in">
+                <div class="card-title">📨 Последние письма</div>
+                <div class="email-list" id="emails-container">
+                    <div class="email-item">
+                        <div class="email-from">no-reply@classroom.google.com</div>
+                        <div class="email-subject">Новое задание в классе</div>
+                        <div class="email-date">Только что</div>
+                    </div>
+                    <div class="email-item">
+                        <div class="email-from">support@github.com</div>
+                        <div class="email-subject">Ваш репозиторий был обновлен</div>
+                        <div class="email-date">2 минуты назад</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification hidden">
+        ✅ Настройки сохранены!
     </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
-        tg.MainButton.setText("💾 Сохранить").show();
+        tg.MainButton.hide();
 
-        // Определяем почтовый провайдер
-        document.getElementById('email').addEventListener('input', function(e) {
-            const email = e.target.value.toLowerCase();
-            const gmailInfo = document.getElementById('gmail-info');
-            const ukrInfo = document.getElementById('ukr-info');
-            
-            gmailInfo.style.display = 'none';
-            ukrInfo.style.display = 'none';
-            
-            if (email.includes('gmail.com')) {
-                gmailInfo.style.display = 'block';
-            } else if (email.includes('ukr.') || email.includes('ukr.education')) {
-                ukrInfo.style.display = 'block';
+        let userData = null;
+        let isMonitoring = false;
+
+        // Определяем, что показывать при загрузке
+        function determineView() {
+            // Сначала пытаемся получить данные пользователя
+            requestUserData();
+        }
+
+        // Запрос данных пользователя у бота
+        function requestUserData() {
+            const requestData = {
+                action: 'get_user_data'
+            };
+            tg.sendData(JSON.stringify(requestData));
+        }
+
+        // Обработчик сообщений от бота
+        function handleBotMessage(data) {
+            if (data.type === 'user_data') {
+                userData = data.data;
+                if (userData && userData.email) {
+                    showMonitoringPanel();
+                } else {
+                    showSetupPanel();
+                }
+            } else if (data.type === 'monitoring_toggled') {
+                isMonitoring = data.is_monitoring;
+                updateMonitoringStatus();
+                showNotification('Статус мониторинга изменен');
             }
-        });
+        }
 
-        // Отправка формы
-        document.getElementById('settings-form').addEventListener('submit', function(e) {
+        // Показать панель мониторинга
+        function showMonitoringPanel() {
+            document.getElementById('loading-section').classList.add('hidden');
+            document.getElementById('setup-section').classList.add('hidden');
+            document.getElementById('monitoring-section').classList.remove('hidden');
+            
+            // Заполняем данные
+            document.getElementById('user-email').textContent = userData.email;
+            document.getElementById('user-filter').textContent = userData.sender_filter;
+            document.getElementById('user-created').textContent = new Date(userData.created_at).toLocaleDateString();
+            
+            isMonitoring = userData.is_monitoring;
+            updateMonitoringStatus();
+        }
+
+        // Показать панель настройки
+        function showSetupPanel() {
+            document.getElementById('loading-section').classList.add('hidden');
+            document.getElementById('monitoring-section').classList.add('hidden');
+            document.getElementById('setup-section').classList.remove('hidden');
+        }
+
+        // Показать настройки (из мониторинга)
+        function showSetup() {
+            showSetupPanel();
+        }
+
+        // Обновить статус мониторинга
+        function updateMonitoringStatus() {
+            const statusBadge = document.getElementById('status-badge');
+            const statusText = document.getElementById('status-text');
+            const startBtn = document.getElementById('start-btn');
+            const stopBtn = document.getElementById('stop-btn');
+
+            if (isMonitoring) {
+                statusBadge.className = 'status-badge status-active';
+                statusBadge.textContent = '✅ Активен';
+                statusText.textContent = 'Мониторинг запущен, проверка каждые 5 минут';
+                startBtn.classList.add('hidden');
+                stopBtn.classList.remove('hidden');
+            } else {
+                statusBadge.className = 'status-badge status-inactive';
+                statusBadge.textContent = '❌ Остановлен';
+                statusText.textContent = 'Мониторинг не активен';
+                startBtn.classList.remove('hidden');
+                stopBtn.classList.add('hidden');
+            }
+        }
+
+        // Переключить мониторинг
+        function toggleMonitoring() {
+            const requestData = {
+                action: 'toggle_monitoring'
+            };
+            tg.sendData(JSON.stringify(requestData));
+        }
+
+        // Проверить почту сейчас
+        function checkMailNow() {
+            showNotification('Запрос на проверку отправлен');
+            // Здесь будет запрос к боту на немедленную проверку
+        }
+
+        // Показать уведомление
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Обработчик формы настройки
+        document.getElementById('setup-form').addEventListener('submit', function(e) {
             e.preventDefault();
             
             const formData = {
@@ -224,19 +549,32 @@
             };
 
             tg.sendData(JSON.stringify(formData));
-            tg.showPopup({
-                title: 'Успех!',
-                message: 'Настройки сохранены. Можно переходить к мониторингу.',
-                buttons: [{type: 'ok'}]
-            });
+            showNotification('Настройки сохраняются...');
+            
+            // Через секунду запрашиваем обновленные данные
+            setTimeout(requestUserData, 1000);
         });
 
-        function openMonitoring() {
-            // Открываем страницу мониторинга
-            tg.openLink(WEBAPP_MONITORING_URL);
-        }
-
+        // Инициализация
         tg.ready();
+        determineView();
+
+        // Слушаем сообщения от бота (симуляция - в реальности нужно через бота)
+        // Это заглушка для демонстрации
+        setTimeout(() => {
+            // Симуляция получения данных пользователя
+            const mockData = {
+                type: 'user_data',
+                data: {
+                    email: 'yetyshechko@46.ukr.education',
+                    sender_filter: 'no-reply@classroom.google.com',
+                    is_monitoring: false,
+                    last_uid: 12345,
+                    created_at: new Date().toISOString()
+                }
+            };
+            handleBotMessage(mockData);
+        }, 1000);
     </script>
 </body>
 </html>
